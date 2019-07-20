@@ -14,9 +14,9 @@ test:
 	cd ../benchmark && bash run_all_unittests.bash # unit tests
 	cd tests && python test_sparse_blocks.py # integration tests
 
-CUDA_INC = /usr/local/cuda/include
-LOCAL_INC = /usr/local # needed for build to work with TF 1.8 since it's looking at cuda/include
-CUDA_LIB = /usr/local/cuda/lib64
+CUDA_INC = /home/killeen/local/cuda/include
+LOCAL_INC = /home/killeen/local # needed for TF 
+CUDA_LIB = /home/killeen/local/cuda/lib64
 TF_INC   = $(shell python -c "import tensorflow; print(tensorflow.sysconfig.get_include())")
 TF_LIB   = $(shell python -c "import tensorflow as tf; print(tf.sysconfig.get_lib())")
 GCC5     = $(shell g++ --version | grep 5.4 | wc -l)
@@ -28,11 +28,8 @@ endif
 #@echo Setting ABI=$(ABI)
 
 NVCCFLAGS=-O3 -use_fast_math -std=c++11 \
-	-gencode arch=compute_61,code=sm_61 \
-	-gencode arch=compute_70,code=sm_70 \
-	-gencode arch=compute_60,code=sm_60 \
-	-gencode arch=compute_52,code=sm_52 \
-	-I $(TF_INC) -I $(CUDA_INC) -I $(LOCAL_INC) -D GOOGLE_CUDA=1 -x cu -w -Xcompiler -fPIC --expt-relaxed-constexpr \
+	-gencode arch=compute_37,code=sm_37 \
+	-I $(TF_INC) -I $(CUDA_INC) -I $(LOCAL_INC) -D GOOGLE_CUDA=1 -x cu -w -Xcompiler -fPIC --expt-relaxed-constexpr -DNDEBUG \
 	$(ABI) # -lineinfo
 
 CUOBJS=\

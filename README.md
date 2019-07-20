@@ -1,4 +1,55 @@
-# Sparse Blocks Network (SBNet)
+# Sparse Blocks Network (SBNet) (Fork)
+
+This repository is forked from
+[uber-research/sbnet](https://github.com/uber-research/sbnet). In addition to
+the original README, included below, I've included a few notes about
+installation on my particular system, for future/external reference.
+
+## Installation
+
+I work remotely on a cluster using Slurm, so configuring Tensorflow, Cuda, and
+SBNet to work together was less than ideal. I have no root priveledges,
+naturally. I used Cuda 9.0, Tensorflow 1.13.1, and a Tesla K80 graphics
+card. These are the steps I took:
+1. Ensure the Hardware requirements section is followed. My `Tesla K80` graphics
+   card has code 37. In `sbnet_tensorflow/sbnet_ops/Makefile`, I removed lines
+   31-34 and replaced them with ``` -gencode arch=compute_37,code=sm_37 \ ```
+   which has the correct code. Without this change, I got errors like
+```
+/sbnet_ops/libsbnet.so: undefined symbol: _ZN10tensorflow8internal21CheckOpMessageBuilder9NewStringEv
+```
+   on running `make test`.
+2. In that same file, line 17 locates the installation of CUDA. Since CUDA was
+   installed as `path/to/cuda-9.0-el7-x86_64` rather than just cuda, a lot of `#include`
+   statements wouldn't work. Therefore I symlinked: `path/to/cuda-9.0-e17-x86_64`
+   to `~/local/cuda` with
+```
+ln -s path/to/cuda-9.0-e17-x86_64` /home/killeen/local/cuda`
+```
+   in my user directory. I then changed line 17 in
+   `sbnet_tensorflow/sbnet_ops/Makefile` to
+```
+CUDA_INC = /home/killeen/local/cuda/include
+```
+3. Line 18 in the same file is confusing. Basically tensorflow has the line
+```
+#include cuda/includa/cuda.h
+```
+   in some places, so you also have to add the parent directory of your cuda
+   installation to the nvcc flags. This is accomplished by changing `LOCAL_INC`
+   on line 18, e.g.:
+```
+LOCAL_INC = /home/killeen/local
+```
+4. Similarly, `CUDA_LIB` on line 19 needs to be updated to point to the proper
+   `lib64`. You get the idea.
+5. Finally, I added `-DNDEBUG` to the nvcc flags on line 32. This was needed to
+   get rid of this error during compile time:
+```
+error: constexpr function return is non-constant
+```
+
+# Sparse Bloocks Network (SBNet) (original)
 
 This repository releases code for our paper [*SBNet: Sparse Blocks Network for Fast Inference*](https://arxiv.org/abs/1801.02108). Please refer to our [blog post](https://eng.uber.com/sbnet) for more context.
 Note that benchmarking in the paper was performed with an older version of this repo using TensorFlow 1.2, cuDNN 6.1 and commit cf8ea06.
@@ -14,9 +65,13 @@ Installation was tested under Ubuntu 14.04 and 16.04 with TensorFlow 1.8, CUDA 9
 
 ## Hardware requirements
 
-Code was tested on and compiled for NVIDIA CUDA 6.1, 6.0, 5.2 and 7.0 architectures (Titan XP, GTX 1080Ti, GTX 1080, P100, V100, TitanV, and most Maxwell cards).
-To compile for an older architecture please modify the Makefile and add the corresponding line, such as `-gencode arch=compute_50,code=sm_50` for older cards such as laptop Maxwell.
-Please refer to [CUDA Wikipedia](https://en.wikipedia.org/wiki/CUDA) page to lookup the architecture code for your graphics card.
+Code was tested on and compiled for NVIDIA CUDA 6.1, 6.0, 5.2 and 7.0
+architectures (Titan XP, GTX 1080Ti, GTX 1080, P100, V100, TitanV, and most
+Maxwell cards).  To compile for an older architecture please modify the Makefile
+and add the corresponding line, such as `-gencode arch=compute_50,code=sm_50`
+for older cards such as laptop Maxwell.  Please refer to [CUDA
+Wikipedia](https://en.wikipedia.org/wiki/CUDA) page to lookup the architecture
+code for your graphics card.
 
 
 ## Setup
