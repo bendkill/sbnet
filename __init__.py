@@ -42,6 +42,7 @@ def _sparse_gather_grad(op, grad):
 
 
 @ops.RegisterGradient("SparseScatter")
+@ops.RegisterGradient("SparseScatterVar")
 def _sparse_scatter_grad(op, grad):
   # x is shaped like blocked tensor of gathered blocks [Nblocks*BH*BW*C]
   # grad is shaped as output tensor [NHWC]
